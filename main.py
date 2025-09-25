@@ -2,3 +2,4 @@
 # Пример:
 print("Hello, world!")
 print(42)
+

@@ -8,11 +8,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install -r requirements.txt
+
+      - name: Upgrade pip & install deps (pytest + ruff)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          # подстраховка, если ruff не в requirements.txt
+          python - <<'PY'
+import importlib.util, sys
+sys.exit(0 if importlib.util.find_spec("ruff") else 1)
+PY
+          || pip install ruff==0.6.8
+          ruff --version
+
       - name: Lint (Ruff)
-        run: ruff check .
+        run: ruff check . --output-format=github
+
       - name: Tests (pytest)
         run: pytest

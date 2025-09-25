@@ -1,10 +1,11 @@
-# Не запрещаем print; базовые ошибки/импорты/упрощения
 line-length = 100
 target-version = "py311"
 
-# Минимальный набор правил: pycodestyle (E), pyflakes (F), isort (I), pyupgrade (UP)
+[lint]
 select = ["E", "F", "I", "UP"]
+ignore = []
 
-ignore = [
-  # Ничего не игнорируем по умолчанию
-]
+[lint.isort]
+# не обязательно, но помогает:
+combine-as-imports = true
+known-first-party = ["src"]

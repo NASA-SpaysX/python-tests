@@ -1,28 +1,21 @@
-name: CI
-on:
-  push:
-  pull_request:
+import io
+import runpy
+import sys
 
-jobs:
-  checks:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+def run_student_code():
+    buf = io.StringIO()
+    old_stdout = sys.stdout
+    try:
+        sys.stdout = buf
+        runpy.run_path("main.py", run_name="__main__")
+    finally:
+        sys.stdout = old_stdout
+    return buf.getvalue().strip().splitlines()
 
-      - name: Upgrade pip & install deps (pytest + ruff)
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          # на случай если ruff не в requirements.txt:
-          python -c "import importlib.util,sys; sys.exit(0 if importlib.util.find_spec('ruff') else 1)" || pip install ruff==0.6.8
-          ruff --version
 
-      - name: Lint (Ruff)
-        run: ruff check . --output-format=github
-
-      - name: Tests (pytest)
-        run: pytest
+def test_output_lines():
+    output = run_student_code()
+    assert len(output) >= 2, "Должно быть минимум 2 строки вывода (два print)."
+    assert output[0] == "Hello, world!"
+    assert output[1] == "42"

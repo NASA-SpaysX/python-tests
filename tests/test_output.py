@@ -1,24 +1,28 @@
-import pytest
-import runpy
-import io
-import sys
+name: CI
+on:
+  push:
+  pull_request:
 
-def run_student_code():
-    buf = io.StringIO()
-    sys_stdout = sys.stdout
-    try:
-        sys.stdout = buf
-        # Выполнить main.py как скрипт
-        runpy.run_path("main.py", run_name="__main__")
-    finally:
-        sys.stdout = sys_stdout
-    return buf.getvalue().strip().splitlines()
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-def test_output_lines():
-    output = run_student_code()
-    # проверим, что хотя бы 2 строки вывода
-    assert len(output) >= 2, "Должно быть минимум 2 print()"
-    # первая строка должна быть строкой
-    assert output[0] == "Hello, world!"
-    # вторая строка должна быть числом
-    assert output[1] == "42"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Upgrade pip & install deps (pytest + ruff)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          # на случай если ruff не в requirements.txt:
+          python -c "import importlib.util,sys; sys.exit(0 if importlib.util.find_spec('ruff') else 1)" || pip install ruff==0.6.8
+          ruff --version
+
+      - name: Lint (Ruff)
+        run: ruff check . --output-format=github
+
+      - name: Tests (pytest)
+        run: pytest
